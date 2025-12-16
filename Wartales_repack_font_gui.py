@@ -144,9 +144,11 @@ class RepackApp:
             self.ttf_menu.set("(no TTFs found)")
         else:
             self.ttf_menu["values"] = ttfs
-            # select first if nothing selected
+            # Prefer ChironGoRoundTC-400R.ttf if available, otherwise select the first entry
+            preferred = "ChironGoRoundTC-400R.ttf"
             if not self.ttf_var.get() or self.ttf_var.get() not in ttfs:
-                self.ttf_var.set(ttfs[-1])
+                choice = preferred if preferred in ttfs else ttfs[0]
+                self.ttf_var.set(choice)
 
     def _append_log(self, text: str):
         self.log.insert(tk.END, text)
