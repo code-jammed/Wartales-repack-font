@@ -13,7 +13,7 @@ It is assumed that you have already updated the localization files.
    - expected SHA256: `8E68482A506320B1AD509FD5E5AB885C571FD6845B60E593E2B923CD48F23D0D`
 
 2. `txt2fnt\txt2fnt.exe` and its dependencies
-   - [txt2fnt](https://github.com/jms-code/txt2fnt)
+   - [txt2fnt](https://github.com/code-jammed/txt2fnt)
 
 3. `quickbms\quickbms.exe` & `quickbms\quickbms_4gb_files.exe` and their dependencies
    - [QuickBMS](https://aluigi.altervista.org/quickbms.htm)
