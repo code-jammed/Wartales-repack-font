@@ -98,6 +98,18 @@ class ToolTip:
             tw.destroy()
 
 
+class HelpLabel(ttk.Label):
+    """A clickable (?) label that shows a tooltip and a message box on click."""
+    def __init__(self, master, text, **kwargs):
+        super().__init__(master, text="(?)", foreground="blue", cursor="hand2", **kwargs)
+        self.msg = text
+        ToolTip(self, text)
+        self.bind("<Button-1>", self.show_msgbox)
+
+    def show_msgbox(self, event):
+        messagebox.showinfo("Help", self.msg)
+
+
 class RepackApp:
     def __init__(self, root: tk.Tk):
         self.root = root
@@ -158,27 +170,43 @@ class RepackApp:
 
         # Run button and status
         row += 1
-        self.run_btn = ttk.Button(frm, text="重打字體", command=self._on_run)
-        self.run_btn.grid(column=0, row=row, sticky=tk.W)
-        ToolTip(self.run_btn, "執行字體重打包流程：\n1. 從 res.pak 提取中文文本\n2. 根據文本與選定 TTF 生成字體\n3. 將生成的字體打包進 assets.pak")
+        
+        # Col 0: Run button + Help
+        run_frame = ttk.Frame(frm)
+        run_frame.grid(column=0, row=row, sticky=tk.W)
+        self.run_btn = ttk.Button(run_frame, text="重打字體", command=self._on_run)
+        self.run_btn.pack(side=tk.LEFT)
+        HelpLabel(run_frame, "執行字體重打包流程：\n1. 從 res.pak 提取中文文本\n2. 根據文本與選定 TTF 生成字體\n3. 將生成的字體打包進 assets.pak").pack(side=tk.LEFT, padx=2)
 
+        # Col 1: Status
         self.status_lbl = tk.Label(frm, text="Ready")
         self.status_lbl.grid(column=1, row=row, sticky=tk.W)
 
-        self.extract_btn = ttk.Button(frm, text="只提取文本", command=self._on_extract_only)
-        self.extract_btn.grid(column=2, row=row, sticky=tk.E)
-        ToolTip(self.extract_btn, "僅執行第一步：\n1. 從 res.pak 提取中文文本\n(不生成字體也不打包)")
+        # Col 2: Extract button + Help
+        extract_frame = ttk.Frame(frm)
+        extract_frame.grid(column=2, row=row, sticky=tk.E)
+        self.extract_btn = ttk.Button(extract_frame, text="只提取文本", command=self._on_extract_only)
+        self.extract_btn.pack(side=tk.LEFT)
+        HelpLabel(extract_frame, "僅執行第一步：\n1. 從 res.pak 提取中文文本\n(不生成字體也不打包)").pack(side=tk.LEFT, padx=2)
+
+        # Col 3: Inject button + Help
+        inject_frame = ttk.Frame(frm)
+        inject_frame.grid(column=3, row=row, sticky=tk.W, padx=(5, 0))
+        self.inject_btn = ttk.Button(inject_frame, text="只注入新翻譯", command=self._on_inject_xml)
+        self.inject_btn.pack(side=tk.LEFT)
+        HelpLabel(inject_frame, "將 _new_xml_ 資料夾中的翻譯檔注入 res.pak\n(Inject translation files from _new_xml_ folder into res.pak)").pack(side=tk.LEFT, padx=2)
 
         # Log area
         row += 1
         ttk.Label(frm, text="Output log:").grid(column=0, row=row, sticky=tk.W)
         row += 1
         self.log = scrolledtext.ScrolledText(frm, height=18, wrap=tk.WORD)
-        self.log.grid(column=0, row=row, columnspan=3, sticky=tk.N + tk.S + tk.E + tk.W)
+        self.log.grid(column=0, row=row, columnspan=4, sticky=tk.N + tk.S + tk.E + tk.W)
 
         # Configure resizing
         frm.columnconfigure(1, weight=1)
         frm.columnconfigure(2, weight=1)
+        frm.columnconfigure(3, weight=0)
         frm.rowconfigure(row, weight=1)
 
         # Status label fonts and colors for spinner
@@ -258,7 +286,7 @@ class RepackApp:
         # run in background thread
         thread = threading.Thread(
             target=self._run_repack_thread,
-            args=(ttf, font_size, respak, lang, False),
+            args=(ttf, font_size, respak, lang, "full"),
             daemon=True,
         )
         thread.start()
@@ -276,6 +304,7 @@ class RepackApp:
         # disable controls
         self.run_btn.config(state=tk.DISABLED)
         self.extract_btn.config(state=tk.DISABLED)
+        self.inject_btn.config(state=tk.DISABLED)
         self._running = True
         self._append_log(
             f"Starting extraction only: res_pak={respak}, lang={lang}\n"
@@ -285,12 +314,44 @@ class RepackApp:
         # run in background thread
         thread = threading.Thread(
             target=self._run_repack_thread,
-            args=(ttf, font_size, respak, lang, True),
+            args=(ttf, font_size, respak, lang, "extract"),
             daemon=True,
         )
         thread.start()
 
-    def _run_repack_thread(self, ttf: str, font_size: int, respak: str, lang: str, extract_only: bool):
+    def _on_inject_xml(self):
+        if self._running:
+            return
+
+        respak = self.respak_var.get()
+        lang = self.lang_var.get()
+        ttf = self.ttf_var.get() or "default"
+        font_size = self.font_size_var.get()
+        
+        new_xml_dir = "_new_xml_"
+        if not os.path.exists(new_xml_dir):
+            messagebox.showerror("Error", f"Directory not found: {new_xml_dir}\nPlease create it and put xml files there.")
+            return
+
+        # disable controls
+        self.run_btn.config(state=tk.DISABLED)
+        self.extract_btn.config(state=tk.DISABLED)
+        self.inject_btn.config(state=tk.DISABLED)
+        self._running = True
+        self._append_log(
+            f"Starting injection: xml_dir={new_xml_dir}, res_pak={respak}, lang={lang}\n"
+        )
+        self._animate_spinner()
+
+        # run in background thread
+        thread = threading.Thread(
+            target=self._run_repack_thread,
+            args=(ttf, font_size, respak, lang, "inject"),
+            daemon=True,
+        )
+        thread.start()
+
+    def _run_repack_thread(self, ttf: str, font_size: int, respak: str, lang: str, mode: str):
         # Locate Wartales_repack_font.exe (expect in the repo root or same dir as this script)
         exe_name = "Wartales_repack_font.exe"
         exe_path = os.path.join(os.path.dirname(__file__), exe_name)
@@ -313,8 +374,11 @@ class RepackApp:
             "-lang",
             lang,
         ]
-        if extract_only:
+        if mode == "extract":
             argv.append("--extract-only")
+        elif mode == "inject":
+            argv.append("--inject-xml")
+            argv.append("_new_xml_")
 
         # Run subprocess and capture stdout/stderr
         if IS_DEBUG:
@@ -354,6 +418,7 @@ class RepackApp:
         self._running = False
         self.run_btn.config(state=tk.NORMAL)
         self.extract_btn.config(state=tk.NORMAL)
+        self.inject_btn.config(state=tk.NORMAL)
         self.status_lbl.config(text="Ready")
 
 
