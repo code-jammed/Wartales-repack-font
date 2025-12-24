@@ -12,16 +12,15 @@ used interactively or from CI.
 """
 
 import argparse
+import glob
+import os
 import shutil
 import subprocess
 import sys
-import os
-import glob
 from typing import List
 
 from source.util.res_i18n_extractor import extract_i18n
 from source.util.res_i18n_injector import inject_i18n
-
 
 # Use only relative paths (relative to current working directory)
 TOOLS = os.path.join("_tools_")
@@ -45,9 +44,7 @@ def find_ttfs(folder: str) -> List[str]:
     return sorted(glob.glob(os.path.join(folder, "*.ttf")))
 
 
-def run_txt2fnt(
-    ttf: str, fs: int = 48
-) -> int:
+def run_txt2fnt(ttf: str, fs: int = 48) -> int:
     os.makedirs(MODDED_ASSETS, exist_ok=True)
     txt2fnt_exe = os.path.join(TOOLS, "txt2fnt", "txt2fnt.exe")
 
@@ -127,9 +124,7 @@ def main(argv: List[str]) -> int:
         default="zh",
         help="language token to extract (eg: zh)",
     )
-    parser.add_argument(
-        "--res-pak", default="res.pak", help="path to res.pak archive"
-    )
+    parser.add_argument("--res-pak", default="res.pak", help="path to res.pak archive")
     parser.add_argument(
         "-fs",
         "--font-size",
@@ -162,9 +157,9 @@ def main(argv: List[str]) -> int:
     if args.inject_xml_dir:
         print(f"Injecting XML from {args.inject_xml_dir} into {args.res_pak}...")
         if not check_prereqs(require_quickbms=True, require_font_tools=False):
-             print("Missing QuickBMS tool")
-             return 2
-             
+            print("Missing QuickBMS tool")
+            return 2
+
         if inject_i18n(args.res_pak, args.inject_xml_dir, args.language):
             print("Injection complete.")
             return 0
