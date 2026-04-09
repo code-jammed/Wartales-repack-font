@@ -113,7 +113,7 @@ class HelpLabel(ttk.Label):
 class RepackApp:
     def __init__(self, root: tk.Tk):
         self.root = root
-        root.title("Wartales 戰爭傳說 重打中文字體包")
+        root.title("Wartales 戰爭傳說 重注中文字體工具")
         root.geometry("880x640")
 
         # Slightly increase base UI fonts for better readability
@@ -172,7 +172,7 @@ class RepackApp:
         row += 1
         mixed_frame = ttk.Frame(frm)
         mixed_frame.grid(column=0, row=row, sticky=tk.W, columnspan=4)
-        self.mixed_btn = ttk.Button(mixed_frame, text="注入新翻譯 及 重打字體", command=self._on_inject_and_repack)
+        self.mixed_btn = ttk.Button(mixed_frame, text="注入新翻譯 及 重新生成字體", command=self._on_inject_and_repack)
         self.mixed_btn.pack(side=tk.LEFT)
         HelpLabel(mixed_frame, "完整流程：\n1. 將 _new_xml_ 注入 res.pak\n2. 執行提取、生成字體、打包 assets.pak").pack(side=tk.LEFT, padx=2)
 
@@ -182,9 +182,9 @@ class RepackApp:
         # Col 0: Run button + Help
         run_frame = ttk.Frame(frm)
         run_frame.grid(column=0, row=row, sticky=tk.W)
-        self.run_btn = ttk.Button(run_frame, text="以現有的文本重打字體", command=self._on_run)
+        self.run_btn = ttk.Button(run_frame, text="以現有的文本重新生成字體（只更改字體）", command=self._on_run)
         self.run_btn.pack(side=tk.LEFT)
-        HelpLabel(run_frame, "執行字體重打包流程：\n1. 從 res.pak 提取中文文本\n2. 根據文本與選定 TTF 生成字體\n3. 將生成的字體打包進 assets.pak").pack(side=tk.LEFT, padx=2)
+        HelpLabel(run_frame, "執行字體重新注入流程：\n1. 從 res.pak 提取中文文本\n2. 根據文本與選定 TTF 生成字體\n3. 將生成的字體打包進 assets.pak").pack(side=tk.LEFT, padx=2)
 
         # Col 1: Status
         self.status_lbl = tk.Label(frm, text="就緒")
@@ -291,9 +291,9 @@ class RepackApp:
         self.inject_btn.config(state=tk.DISABLED)
         self.mixed_btn.config(state=tk.DISABLED)
         self._running = True
-        self._current_action_text = "重打包中"
+        self._current_action_text = "重新打包中"
         self._append_log(
-            f"開始重打包流程：字體={ttf}, 大小={font_size}, res_pak={respak}, 語言={lang}\n"
+            f"開始重新打包流程：字體={ttf}, 大小={font_size}, res_pak={respak}, 語言={lang}\n"
         )
         self._animate_spinner()
 
@@ -391,7 +391,7 @@ class RepackApp:
         self._running = True
         self._current_action_text = "注入並打包中"
         self._append_log(
-            f"開始注入並重打包：xml目錄={new_xml_dir}, res_pak={respak}, 語言={lang}\n"
+            f"開始注入並重新打包：xml目錄={new_xml_dir}, res_pak={respak}, 語言={lang}\n"
         )
         self._animate_spinner()
 

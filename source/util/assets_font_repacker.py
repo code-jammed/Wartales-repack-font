@@ -40,5 +40,5 @@ def repack_assets_font() -> bool:
         print(f"未生成預期的資源包: {assets_pak}")
         return False
 
-    print(f"已將資源重打包至 {assets_pak}")
+    print(f"已將資源重新打包至 {assets_pak}")
     return True

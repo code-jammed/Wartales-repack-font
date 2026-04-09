@@ -242,9 +242,9 @@ def main(argv: List[str]) -> int:
         print(f"無法導入 assets repacker: {e}")
         return 8
 
-    print("正在將修改後的資源重打包進 assets.pak...")
+    print("正在將修改後的資源重新打包進 assets.pak...")
     if not repack_assets_font():
-        print("重打包失敗")
+        print("重新打包失敗")
         return 8
 
     print("完成。")
